@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: telegrambotmovies
+Version: 0.1
+Requires-Dist: bs4==0.0.1
+Requires-Dist: pandas==2.2.2
+Requires-Dist: pyTelegramBotAPI==4.17.0
+Requires-Dist: requests==2.6.0
