@@ -10,7 +10,8 @@ movies['ratingKP'] = pd.to_numeric(movies['ratingKP'], errors='coerce').fillna(0
 movies['ratingImdb'] = pd.to_numeric(movies['ratingImdb'], errors='coerce').fillna(0)
 movies['Year'] = pd.to_numeric(movies['Year'], errors='coerce').fillna(0).astype(int)
 
-bot = telebot.TeleBot('7008011432:AAGzB8Njxp2C8LwxjOCMEh2PomlK-DHIyp4')
+# old API 7008011432:AAGzB8Njxp2C8LwxjOCMEh2PomlK-DHIyp4
+bot = telebot.TeleBot('7606959553:AAGS4AwiHLHoafx_vuKOxB4mPW1SPSLSTKY')
 
 
 @bot.message_handler(commands=['start'])
@@ -142,7 +143,8 @@ def top_movies_by_actor(message, actor):
 
 def send_top_movies(message, top_movies, category):
     try:
-        movie_list = '\n'.join([f"{i+1}. {row['NameFilm']} - рейтинг {row['ratingKP']}" for i, (_, row) in enumerate(top_movies.iterrows())])
+        movie_list = '\n'.join([f"{i + 1}. {row['NameFilm']} - рейтинг {row['ratingKP']}" for i, (_, row) in
+                                enumerate(top_movies.iterrows())])
         bot.send_message(message.chat.id, f"Топ фильмов по {category}:\n{movie_list}")
 
         markup = types.InlineKeyboardMarkup()
@@ -182,6 +184,7 @@ def callback_movie_details(call):
     except Exception as e:
         bot.send_message(call.message.chat.id, f'Произошла ошибка при получении данных о фильме: {e}')
         show_main_menu(call.message)
+
 
 # Бесконечный цикл для обработки переподключений
 while True:
