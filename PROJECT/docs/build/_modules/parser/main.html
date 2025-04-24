@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html lang="ru" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>parser.main &#8212; документация MovieBot 1.0</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="../../_static/documentation_options.js?v=9ca2116e"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/translations.js?v=cd1d70c9"></script>
+    <link rel="index" title="Алфавитный указатель" href="../../genindex.html" />
+    <link rel="search" title="Поиск" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Исходный код parser.main</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Модуль для парсинга данных о фильмах с API Кинопоиска.</span>
+
+<span class="sd">Этот модуль получает информацию о фильмах через Kinopoisk API Unofficial,</span>
+<span class="sd">обрабатывает данные и сохраняет их в CSV-файл.</span>
+
+<span class="sd">.. note::</span>
+<span class="sd">    Для работы модуля требуется API-ключ от Kinopoisk API Unofficial.</span>
+<span class="sd">    Получить ключ можно по ссылке: https://kinopoiskapiunofficial.tech/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">LxmlSoup</span> <span class="kn">import</span> <span class="n">LxmlSoup</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">random</span><span class="p">,</span> <span class="n">randint</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+
+<span class="c1"># Конфигурационные параметры</span>
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;X-API-KEY&#39;</span><span class="p">:</span> <span class="s1">&#39;ab6012c7-ec2d-4d19-949c-1c2d30f31d1f&#39;</span><span class="p">,</span>  <span class="c1"># Замените на свой API-ключ</span>
+    <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span>
+<span class="p">}</span>
+
+<span class="c1"># Инициализация списков для хранения данных</span>
+<span class="n">KPid</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># ID фильма на Кинопоиске</span>
+<span class="n">NameFilm</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Название фильма на русском</span>
+<span class="n">NameFilmEn</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Название фильма на английском</span>
+<span class="n">PosterUrl</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># URL постера в полном размере</span>
+<span class="n">PosterUrlSmall</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># URL постера в уменьшенном размере</span>
+<span class="n">Description</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Описание фильма</span>
+<span class="n">Countries</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Страны производства</span>
+<span class="n">ratingMpaa</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Возрастное ограничение (MPAA)</span>
+<span class="n">ratingAgeLimits</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Возрастное ограничение</span>
+<span class="n">Type</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Тип (фильм/сериал)</span>
+<span class="n">Year</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Год выпуска</span>
+<span class="n">Genres</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Жанры</span>
+<span class="n">ratingImdb</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Рейтинг IMDB</span>
+<span class="n">ratingKP</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Рейтинг Кинопоиска</span>
+<span class="n">AverageRating</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Средневзвешенный рейтинг</span>
+<span class="n">filmLength</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Длительность в минутах</span>
+<span class="n">WebUrl</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># URL для просмотра</span>
+<span class="n">Genres1</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Временный список для обработки жанров</span>
+<span class="n">WebUrl2</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Альтернативный URL</span>
+
+<span class="c1"># Коэффициенты для расчета средневзвешенного рейтинга</span>
+<span class="n">WeightKP</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">WeightImdb</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<div class="viewcode-block" id="parse_film_data">
+<a class="viewcode-back" href="../../parser.html#parser.main.parse_film_data">[документация]</a>
+<span class="k">def</span> <span class="nf">parse_film_data</span><span class="p">(</span><span class="n">start_id</span><span class="o">=</span><span class="mi">298</span><span class="p">,</span> <span class="n">end_id</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Парсит данные о фильмах в указанном диапазоне ID.</span>
+
+<span class="sd">    :param start_id: Начальный ID фильма для парсинга</span>
+<span class="sd">    :type start_id: int</span>
+<span class="sd">    :param end_id: Конечный ID фильма для парсинга</span>
+<span class="sd">    :type end_id: int</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    :rtype: None</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        Функция сохраняет данные в файл &#39;output.csv&#39; после завершения парсинга.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_id</span><span class="p">,</span> <span class="n">end_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;https://kinopoiskapiunofficial.tech/api/v2.2/films/</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
+            <span class="p">)</span>
+            <span class="n">film_data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+            <span class="c1"># Инициализация переменных для расчета рейтингов</span>
+            <span class="n">ratingKinopoiskVoteCount</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">ratingImdbVoteCount</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">ratingFilmCritics</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">ratingFilmCriticsVoteCount</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="c1"># Обработка данных фильма</span>
+            <span class="k">for</span> <span class="n">section</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">film_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;kinopoiskId&quot;</span><span class="p">:</span>
+                    <span class="n">KPid</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;nameRu&quot;</span><span class="p">:</span>
+                    <span class="n">NameFilm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;nameEn&quot;</span><span class="p">:</span>
+                    <span class="n">NameFilmEn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;posterUrl&quot;</span><span class="p">:</span>
+                    <span class="n">PosterUrl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;posterUrlPreview&quot;</span><span class="p">:</span>
+                    <span class="n">PosterUrlSmall</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;ratingKinopoisk&quot;</span><span class="p">:</span>
+                    <span class="n">ratingKP</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;ratingImdb&quot;</span><span class="p">:</span>
+                    <span class="n">ratingImdb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;ratingFilmCritics&quot;</span><span class="p">:</span>
+                    <span class="n">ratingFilmCritics</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;ratingKinopoiskVoteCount&quot;</span><span class="p">:</span>
+                    <span class="n">ratingKinopoiskVoteCount</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;ratingImdbVoteCount&quot;</span><span class="p">:</span>
+                    <span class="n">ratingImdbVoteCount</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;ratingFilmCriticsVoteCount&quot;</span><span class="p">:</span>
+                    <span class="n">ratingFilmCriticsVoteCount</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+                    <span class="n">Year</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;filmLength&quot;</span><span class="p">:</span>
+                    <span class="n">filmLength</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span>
+                    <span class="n">Description</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;ratingMpaa&quot;</span><span class="p">:</span>
+                    <span class="n">ratingMpaa</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;ratingAgeLimits&quot;</span><span class="p">:</span>
+                    <span class="n">ratingAgeLimits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;countries&quot;</span><span class="p">:</span>
+                    <span class="n">process_countries</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;genres&quot;</span><span class="p">:</span>
+                    <span class="n">process_genres</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span>
+                    <span class="n">Type</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">section</span> <span class="o">==</span> <span class="s2">&quot;webUrl&quot;</span><span class="p">:</span>
+                    <span class="n">WebUrl2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="c1"># Расчет средневзвешенного рейтинга</span>
+            <span class="n">calculate_average_rating</span><span class="p">(</span>
+                <span class="n">ratingImdbVoteCount</span><span class="p">,</span>
+                <span class="n">ratingKinopoiskVoteCount</span><span class="p">,</span>
+                <span class="n">ratingFilmCriticsVoteCount</span><span class="p">,</span>
+                <span class="n">ratingFilmCritics</span>
+            <span class="p">)</span>
+
+            <span class="n">WebUrl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://w2.kpfr.wiki/film/</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ошибка при обработке фильма с ID </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Сохранение данных в CSV</span>
+    <span class="n">save_to_csv</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="process_countries">
+<a class="viewcode-back" href="../../parser.html#parser.main.process_countries">[документация]</a>
+<span class="k">def</span> <span class="nf">process_countries</span><span class="p">(</span><span class="n">countries_data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Обрабатывает данные о странах производства.</span>
+
+<span class="sd">    :param countries_data: Сырые данные о странах из API</span>
+<span class="sd">    :type countries_data: list[dict] or str</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cleaned_data</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">countries_data</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;country&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span>
+    <span class="n">Countries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned_data</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="process_genres">
+<a class="viewcode-back" href="../../parser.html#parser.main.process_genres">[документация]</a>
+<span class="k">def</span> <span class="nf">process_genres</span><span class="p">(</span><span class="n">genres_data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Обрабатывает данные о жанрах.</span>
+
+<span class="sd">    :param genres_data: Сырые данные о жанрах из API</span>
+<span class="sd">    :type genres_data: list[dict] or str</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cleaned_data</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">genres_data</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;genre&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span>
+    <span class="n">Genres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned_data</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_average_rating">
+<a class="viewcode-back" href="../../parser.html#parser.main.calculate_average_rating">[документация]</a>
+<span class="k">def</span> <span class="nf">calculate_average_rating</span><span class="p">(</span><span class="n">imdb_votes</span><span class="p">,</span> <span class="n">kp_votes</span><span class="p">,</span> <span class="n">critics_votes</span><span class="p">,</span> <span class="n">critics_rating</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Рассчитывает средневзвешенный рейтинг.</span>
+
+<span class="sd">    :param imdb_votes: Количество голосов на IMDB</span>
+<span class="sd">    :type imdb_votes: int</span>
+<span class="sd">    :param kp_votes: Количество голосов на Кинопоиске</span>
+<span class="sd">    :type kp_votes: int</span>
+<span class="sd">    :param critics_votes: Количество голосов критиков</span>
+<span class="sd">    :type critics_votes: int</span>
+<span class="sd">    :param critics_rating: Рейтинг критиков</span>
+<span class="sd">    :type critics_rating: float</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total_votes</span> <span class="o">=</span> <span class="n">imdb_votes</span> <span class="o">+</span> <span class="n">kp_votes</span> <span class="o">+</span> <span class="n">critics_votes</span> <span class="o">*</span> <span class="mi">1000</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratingKP</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">WeightKP</span> <span class="o">=</span> <span class="n">total_votes</span> <span class="o">/</span> <span class="n">kp_votes</span> <span class="o">*</span> <span class="n">ratingKP</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratingImdb</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">WeightImdb</span> <span class="o">=</span> <span class="n">total_votes</span> <span class="o">/</span> <span class="n">imdb_votes</span> <span class="o">*</span> <span class="n">ratingImdb</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">WeightCritics</span> <span class="o">=</span> <span class="n">total_votes</span> <span class="o">/</span> <span class="n">critics_votes</span> <span class="o">*</span> <span class="n">critics_rating</span>
+    <span class="n">AverageRating</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WeightKP</span> <span class="o">+</span> <span class="n">WeightCritics</span> <span class="o">+</span> <span class="n">WeightImdb</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="save_to_csv">
+<a class="viewcode-back" href="../../parser.html#parser.main.save_to_csv">[документация]</a>
+<span class="k">def</span> <span class="nf">save_to_csv</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Сохраняет собранные данные в CSV-файл.</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;KPid&#39;</span><span class="p">:</span> <span class="n">KPid</span><span class="p">,</span>
+        <span class="s1">&#39;Type&#39;</span><span class="p">:</span> <span class="n">Type</span><span class="p">,</span>
+        <span class="s1">&#39;NameFilm&#39;</span><span class="p">:</span> <span class="n">NameFilm</span><span class="p">,</span>
+        <span class="s1">&#39;NameFilmEn&#39;</span><span class="p">:</span> <span class="n">NameFilmEn</span><span class="p">,</span>
+        <span class="s1">&#39;Year&#39;</span><span class="p">:</span> <span class="n">Year</span><span class="p">,</span>
+        <span class="s1">&#39;Countries&#39;</span><span class="p">:</span> <span class="n">Countries</span><span class="p">,</span>
+        <span class="s1">&#39;Genres&#39;</span><span class="p">:</span> <span class="n">Genres</span><span class="p">,</span>
+        <span class="s1">&#39;ratingKP&#39;</span><span class="p">:</span> <span class="n">ratingKP</span><span class="p">,</span>
+        <span class="s1">&#39;ratingImdb&#39;</span><span class="p">:</span> <span class="n">ratingImdb</span><span class="p">,</span>
+        <span class="s1">&#39;AverageRating&#39;</span><span class="p">:</span> <span class="n">AverageRating</span><span class="p">,</span>
+        <span class="s1">&#39;ratingMpaa&#39;</span><span class="p">:</span> <span class="n">ratingMpaa</span><span class="p">,</span>
+        <span class="s1">&#39;ratingAgeLimits&#39;</span><span class="p">:</span> <span class="n">ratingAgeLimits</span><span class="p">,</span>
+        <span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="n">Description</span><span class="p">,</span>
+        <span class="s1">&#39;WebUrl&#39;</span><span class="p">:</span> <span class="n">WebUrl</span><span class="p">,</span>
+        <span class="s1">&#39;WebUrl2&#39;</span><span class="p">:</span> <span class="n">WebUrl2</span>
+    <span class="p">}</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;output.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">parse_film_data</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">MovieBot</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Навигация</h3>
+<p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Все модули проекта</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../parser.html">Parser Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Petrparser.html">Petrparser Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../telegram_bot.html">Telegram Bot Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background Service</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Код модуля</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Novikov D.V., Polyakova V.V, Prepelitsa P.P..
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
