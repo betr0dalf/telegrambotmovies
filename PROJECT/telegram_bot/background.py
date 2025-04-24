@@ -1,21 +1,40 @@
-from flask import Flask
-from flask import request
-from threading import Thread
-import time
-import requests
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-app = Flask('')
+"""
+Модуль для поддержания активности Telegram-бота.
+
+Использует Flask-сервер для ответа на ping-запросы,
+что предотвращает отключение бота на бесплатных хостингах.
+"""
+
+from flask import Flask
+from threading import Thread
+
+app = Flask(__name__)
 
 
 @app.route('/')
 def home():
-  return "I'm alive"
+    """
+  Обработчик корневого маршрута.
+
+  Returns:
+      str: Сообщение о работоспособности сервиса
+  """
+    return "I'm alive"
 
 
 def run():
-  app.run(host='0.0.0.0', port=80)
+    """
+  Запускает Flask-сервер на порту 80.
+  """
+    app.run(host='0.0.0.0', port=80)
 
 
 def keep_alive():
-  t = Thread(target=run)
-  t.start()
+    """
+  Запускает сервер в отдельном потоке.
+  """
+    t = Thread(target=run)
+    t.start()
