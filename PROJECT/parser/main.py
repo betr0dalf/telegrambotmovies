@@ -1,3 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Модуль для парсинга данных о фильмах с API Кинопоиска.
+
+Этот модуль получает информацию о фильмах через Kinopoisk API Unofficial,
+обрабатывает данные и сохраняет их в CSV-файл.
+
+.. note::
+    Для работы модуля требуется API-ключ от Kinopoisk API Unofficial.
+    Получить ключ можно по ссылке: https://kinopoiskapiunofficial.tech/
+"""
+
 from LxmlSoup import LxmlSoup
 import requests
 from random import random, randint
@@ -6,136 +20,224 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 
+# Конфигурационные параметры
 headers = {
-    'X-API-KEY': 'ab6012c7-ec2d-4d19-949c-1c2d30f31d1f',
-    # Api кей свой сделай по ссылке https://kinopoiskapiunofficial.tech/
-    # ab6012c7-ec2d-4d19-949c-1c2d30f31d1f
+    'X-API-KEY': 'ab6012c7-ec2d-4d19-949c-1c2d30f31d1f',  # Замените на свой API-ключ
     'Content-Type': 'application/json'
 }
 
-# my_file = open("data.txt", "a+")
-#
-# # 341 строка баг выдаёт. Надо проверить с какого фильмы начинаются (c 0 до 301 пройтись, мб там раньше что-то было)
-# # Также я создал заранее файл data.txt Не уверен что он в режиме a+ сразу норм заработает
-# # Файл data.txt заполнен с 301 по 340
-# for movie_id in range(298, 1001):
-#     response = requests.get('https://kinopoiskapiunofficial.tech/api/v2.2/films/' + str(movie_id), headers=headers)
-#     if response.status_code == 200:
-#         print(response.json())
-#         my_file.write(str(response.json()) + '\n')
-#     else:
-#         print(f'Ошибка {response.status_code}: {response.text}')
-# my_file.close()
-
-KPid = []  # ID КИНОПОИСК
-NameFilm = []  # Название на русскому
-NameFilmEn = []  # Название на английском
-PosterUrl = []  # Фулл картинка
-PosterUrlSmall = []  # Уменьшенная картинка
-Description = []  # Описание
-Countries = []  # Страна
-ratingMpaa = []  # Возрастное ограничение
+# Инициализация списков для хранения данных
+KPid = []  # ID фильма на Кинопоиске
+NameFilm = []  # Название фильма на русском
+NameFilmEn = []  # Название фильма на английском
+PosterUrl = []  # URL постера в полном размере
+PosterUrlSmall = []  # URL постера в уменьшенном размере
+Description = []  # Описание фильма
+Countries = []  # Страны производства
+ratingMpaa = []  # Возрастное ограничение (MPAA)
 ratingAgeLimits = []  # Возрастное ограничение
-Type = []  # Фильм или сериал
+Type = []  # Тип (фильм/сериал)
 Year = []  # Год выпуска
 Genres = []  # Жанры
-ratingImdb = []  # Рейтинг Imdb
+ratingImdb = []  # Рейтинг IMDB
 ratingKP = []  # Рейтинг Кинопоиска
-AverageRating = []  # Рекомендательный рейтинг
+AverageRating = []  # Средневзвешенный рейтинг
 filmLength = []  # Длительность в минутах
-WebUrl = []  # https://w2.kpfr.wiki/film/ ссылка на просмотр
-Genres1 = []
-WebUrl2 = []
+WebUrl = []  # URL для просмотра
+Genres1 = []  # Временный список для обработки жанров
+WebUrl2 = []  # Альтернативный URL
+
+# Коэффициенты для расчета средневзвешенного рейтинга
 WeightKP = 0
 WeightImdb = 0
-for i in range(298, 500):
-    response = requests.get('https://kinopoiskapiunofficial.tech/api/v2.2/films/' + str(i), headers=headers)
-    Str = response.json()
 
-    ratingKinopoiskVoteCount = 1
-    ratingImdbVoteCount = 1
-    ratingFilmCritics = 1
-    ratingFilmCriticsVoteCount = 1
-    for section, command in Str.items():
-        print(section, command)
-        if section == "kinopoiskId":
-            KPid.append(command)
-        if section == "nameRu":
-            NameFilm.append(command)
-        if section == "nameEn":
-            NameFilmEn.append(command)
-        if section == "posterUrl":
-            PosterUrl.append(command)
-        if section == "posterUrlPreview":
-            PosterUrlSmall.append(command)
-        if section == "ratingKinopoisk":
-            ratingKP.append(command)
-        if section == "ratingImdb":
-            ratingImdb.append(command)
-        if section == "ratingFilmCritics":
-            ratingFilmCritics = command
-        if section == "ratingKinopoiskVoteCount":
-            ratingKinopoiskVoteCount = command
-        if section == "ratingImdbVoteCount":
-            ratingImdbVoteCount = command
-        if section == "ratingFilmCriticsVoteCount":
-            ratingFilmCriticsVoteCount = command
-        if section == "year":
-            Year.append(command)
-        if section == "filmLength":
-            filmLength.append(command)
-        if section == "description":
-            Description.append(command)
-        if section == "ratingMpaa":
-            ratingMpaa.append(command)
-        if section == "ratingAgeLimits":
-            ratingAgeLimits.append(command)
-        if section == "countries":
-            Genres1 = ((str(command).replace("country", "").
-                        replace(" ", "").replace("'", "").
-                        replace("{", "").replace(":", "")).
-                       replace("[", "").replace("}", "")).replace("]", "").split(",")
-            Countries.append(Genres1)
-        if section == "genres":
-            Genres1 = ((str(command).replace("genre", "").
-                        replace(" ", "").replace("'", "").
-                        replace("{", "").replace(":", "")).
-                       replace("[", "").replace("}", "")).replace("]", "").split(",")
-            Genres.append(Genres1)
-        if section == "type":
-            Type.append(command)
-        if section == "webUrl":
-            WebUrl2.append(command)
 
-        VoteCount = ratingImdbVoteCount + ratingKinopoiskVoteCount + ratingFilmCriticsVoteCount * 1000
-        if len(ratingKP) > 0:
-            WeightKP = VoteCount / ratingKinopoiskVoteCount * ratingKP[-1]
-        if len(ratingImdb) > 0:
-            WeightImdb = VoteCount / ratingImdbVoteCount * ratingImdb[-1]
-        WeightCritics = VoteCount / ratingFilmCriticsVoteCount * ratingFilmCritics
+def parse_film_data(start_id=298, end_id=500):
+    """
+    Парсит данные о фильмах в указанном диапазоне ID.
 
-        WebUrl.append("https://w2.kpfr.wiki/film/" + str(i))
-        AverageRating.append(WeightKP + WeightCritics + WeightImdb)
+    :param start_id: Начальный ID фильма для парсинга
+    :type start_id: int
+    :param end_id: Конечный ID фильма для парсинга
+    :type end_id: int
 
-    data = {'KPid': KPid,
-            'Type': Type,
-            'NameFilm': NameFilm,
-            'NameFilmEn': NameFilmEn,
-            'Year': Year,
-            'Countries': Countries,
-            'Genres': Genres,
-            'ratingKP': ratingKP,
-            'ratingImdb': ratingImdb,
-            'AverageRating': AverageRating,
-            'ratingMpaa': ratingMpaa,
-            'ratingAgeLimits': ratingAgeLimits,
-            'Description': Description,
-            'WebUrl': WebUrl,
-            'WebUrl2': WebUrl2
-            }
+    :return: None
+    :rtype: None
+
+    .. note::
+        Функция сохраняет данные в файл 'output.csv' после завершения парсинга.
+    """
+    for i in range(start_id, end_id):
+        try:
+            response = requests.get(
+                f'https://kinopoiskapiunofficial.tech/api/v2.2/films/{i}',
+                headers=headers
+            )
+            film_data = response.json()
+
+            # Инициализация переменных для расчета рейтингов
+            ratingKinopoiskVoteCount = 1
+            ratingImdbVoteCount = 1
+            ratingFilmCritics = 1
+            ratingFilmCriticsVoteCount = 1
+
+            # Обработка данных фильма
+            for section, value in film_data.items():
+                if section == "kinopoiskId":
+                    KPid.append(value)
+                elif section == "nameRu":
+                    NameFilm.append(value)
+                elif section == "nameEn":
+                    NameFilmEn.append(value)
+                elif section == "posterUrl":
+                    PosterUrl.append(value)
+                elif section == "posterUrlPreview":
+                    PosterUrlSmall.append(value)
+                elif section == "ratingKinopoisk":
+                    ratingKP.append(value)
+                elif section == "ratingImdb":
+                    ratingImdb.append(value)
+                elif section == "ratingFilmCritics":
+                    ratingFilmCritics = value
+                elif section == "ratingKinopoiskVoteCount":
+                    ratingKinopoiskVoteCount = value
+                elif section == "ratingImdbVoteCount":
+                    ratingImdbVoteCount = value
+                elif section == "ratingFilmCriticsVoteCount":
+                    ratingFilmCriticsVoteCount = value
+                elif section == "year":
+                    Year.append(value)
+                elif section == "filmLength":
+                    filmLength.append(value)
+                elif section == "description":
+                    Description.append(value)
+                elif section == "ratingMpaa":
+                    ratingMpaa.append(value)
+                elif section == "ratingAgeLimits":
+                    ratingAgeLimits.append(value)
+                elif section == "countries":
+                    process_countries(value)
+                elif section == "genres":
+                    process_genres(value)
+                elif section == "type":
+                    Type.append(value)
+                elif section == "webUrl":
+                    WebUrl2.append(value)
+
+            # Расчет средневзвешенного рейтинга
+            calculate_average_rating(
+                ratingImdbVoteCount,
+                ratingKinopoiskVoteCount,
+                ratingFilmCriticsVoteCount,
+                ratingFilmCritics
+            )
+
+            WebUrl.append(f"https://w2.kpfr.wiki/film/{i}")
+
+        except Exception as e:
+            print(f"Ошибка при обработке фильма с ID {i}: {str(e)}")
+
+    # Сохранение данных в CSV
+    save_to_csv()
+
+
+def process_countries(countries_data):
+    """
+    Обрабатывает данные о странах производства.
+
+    :param countries_data: Сырые данные о странах из API
+    :type countries_data: list[dict] or str
+
+    :return: None
+    """
+    cleaned_data = (str(countries_data)
+                    .replace("country", "")
+                    .replace(" ", "")
+                    .replace("'", "")
+                    .replace("{", "")
+                    .replace(":", "")
+                    .replace("[", "")
+                    .replace("}", "")
+                    .replace("]", "")
+                    .split(","))
+    Countries.append(cleaned_data)
+
+
+def process_genres(genres_data):
+    """
+    Обрабатывает данные о жанрах.
+
+    :param genres_data: Сырые данные о жанрах из API
+    :type genres_data: list[dict] or str
+
+    :return: None
+    """
+    cleaned_data = (str(genres_data)
+                    .replace("genre", "")
+                    .replace(" ", "")
+                    .replace("'", "")
+                    .replace("{", "")
+                    .replace(":", "")
+                    .replace("[", "")
+                    .replace("}", "")
+                    .replace("]", "")
+                    .split(","))
+    Genres.append(cleaned_data)
+
+
+def calculate_average_rating(imdb_votes, kp_votes, critics_votes, critics_rating):
+    """
+    Рассчитывает средневзвешенный рейтинг.
+
+    :param imdb_votes: Количество голосов на IMDB
+    :type imdb_votes: int
+    :param kp_votes: Количество голосов на Кинопоиске
+    :type kp_votes: int
+    :param critics_votes: Количество голосов критиков
+    :type critics_votes: int
+    :param critics_rating: Рейтинг критиков
+    :type critics_rating: float
+
+    :return: None
+    """
+    total_votes = imdb_votes + kp_votes + critics_votes * 1000
+
+    if len(ratingKP) > 0:
+        WeightKP = total_votes / kp_votes * ratingKP[-1]
+    if len(ratingImdb) > 0:
+        WeightImdb = total_votes / imdb_votes * ratingImdb[-1]
+
+    WeightCritics = total_votes / critics_votes * critics_rating
+    AverageRating.append(WeightKP + WeightCritics + WeightImdb)
+
+
+def save_to_csv():
+    """
+    Сохраняет собранные данные в CSV-файл.
+
+    :return: None
+    """
+    data = {
+        'KPid': KPid,
+        'Type': Type,
+        'NameFilm': NameFilm,
+        'NameFilmEn': NameFilmEn,
+        'Year': Year,
+        'Countries': Countries,
+        'Genres': Genres,
+        'ratingKP': ratingKP,
+        'ratingImdb': ratingImdb,
+        'AverageRating': AverageRating,
+        'ratingMpaa': ratingMpaa,
+        'ratingAgeLimits': ratingAgeLimits,
+        'Description': Description,
+        'WebUrl': WebUrl,
+        'WebUrl2': WebUrl2
+    }
 
     df = pd.DataFrame(data)
     df.to_csv('output.csv', index=False)
 
-    # print(KPid, Type, NameFilm, NameFilmEn, Year, Countries, Genres,
-    # ratingKP, ratingImdb, AverageRating, ratingMpaa, ratingAgeLimits, Description, WebUrl)
+
+if __name__ == "__main__":
+    parse_film_data()
