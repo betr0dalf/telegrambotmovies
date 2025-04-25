@@ -1,4 +1,0 @@
-bs4==0.0.1
-pandas==2.2.2
-pyTelegramBotAPI==4.17.0
-requests==2.6.0

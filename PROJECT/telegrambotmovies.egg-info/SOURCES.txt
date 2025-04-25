@@ -1,6 +1,0 @@
-setup.py
-telegrambotmovies.egg-info/PKG-INFO
-telegrambotmovies.egg-info/SOURCES.txt
-telegrambotmovies.egg-info/dependency_links.txt
-telegrambotmovies.egg-info/requires.txt
-telegrambotmovies.egg-info/top_level.txt
