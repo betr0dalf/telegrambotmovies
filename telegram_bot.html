@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html lang="ru" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Telegram Bot Module &#8212; документация MovieBot 1.0</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/jquery.js?v=5d32c60e"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script src="_static/documentation_options.js?v=9ca2116e"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=cd1d70c9"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="next" title="Background Service" href="background.html" />
+    <link rel="prev" title="Petrparser Module" href="Petrparser.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="telegram-bot-module">
+<h1>Telegram Bot Module<a class="headerlink" href="#telegram-bot-module" title="Ссылка на этот заголовок"></a></h1>
+<p>Основной модуль Telegram-бота.</p>
+<p id="module-telegram_bot.main">Основной модуль Telegram-бота для просмотра фильмов и сериалов.</p>
+<p>Бот предоставляет следующие функции:
+- Поиск фильмов по названию
+- Топ фильмов по жанру
+- Топ фильмов за год
+- Топ фильмов режиссера
+- Топ фильмов актера
+- Подробная информация о фильме</p>
+<p>Для работы требуется:
+- API-токен Telegram бота
+- Файл с данными о фильмах (MovieData.csv)
+- Модуль background для поддержания работы бота</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">telegram_bot.main.</span></span><span class="sig-name descname"><span class="pre">MovieBot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MovieData.csv'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot" title="Ссылка на это определение"></a></dt>
+<dd><p>Базовые классы: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Класс для управления Telegram-ботом поиска фильмов.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.bot">
+<span class="sig-name descname"><span class="pre">bot</span></span><a class="headerlink" href="#telegram_bot.main.MovieBot.bot" title="Ссылка на это определение"></a></dt>
+<dd><p>Экземпляр Telegram бота</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>telebot.TeleBot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.movies">
+<span class="sig-name descname"><span class="pre">movies</span></span><a class="headerlink" href="#telegram_bot.main.MovieBot.movies" title="Ссылка на это определение"></a></dt>
+<dd><p>Данные о фильмах</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MovieData.csv'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.__init__"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.__init__" title="Ссылка на это определение"></a></dt>
+<dd><p>Инициализация бота.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token</strong> (<em>str</em>) – API-токен Telegram бота</p></li>
+<li><p><strong>data_file</strong> (<em>str</em>) – Путь к файлу с данными о фильмах</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.load_movie_data">
+<span class="sig-name descname"><span class="pre">load_movie_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.load_movie_data"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.load_movie_data" title="Ссылка на это определение"></a></dt>
+<dd><p>Загружает и обрабатывает данные о фильмах.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_file</strong> (<em>str</em>) – Путь к CSV файлу с данными</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.setup_handlers">
+<span class="sig-name descname"><span class="pre">setup_handlers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.setup_handlers"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.setup_handlers" title="Ссылка на это определение"></a></dt>
+<dd><p>Настройка обработчиков команд бота.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.show_main_menu">
+<span class="sig-name descname"><span class="pre">show_main_menu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.show_main_menu"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.show_main_menu" title="Ссылка на это определение"></a></dt>
+<dd><p>Показывает главное меню бота.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект сообщения Telegram</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.on_click">
+<span class="sig-name descname"><span class="pre">on_click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.on_click"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.on_click" title="Ссылка на это определение"></a></dt>
+<dd><p>Обрабатывает выбор действия из главного меню.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект сообщения Telegram</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.get_year">
+<span class="sig-name descname"><span class="pre">get_year</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.get_year"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.get_year" title="Ссылка на это определение"></a></dt>
+<dd><p>Обрабатывает ввод года пользователем и показывает топ фильмов за этот год.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект сообщения с введенным годом</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.get_director">
+<span class="sig-name descname"><span class="pre">get_director</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.get_director"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.get_director" title="Ссылка на это определение"></a></dt>
+<dd><p>Обрабатывает ввод имени режиссера и показывает топ его фильмов.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект сообщения с именем режиссера</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.get_actor">
+<span class="sig-name descname"><span class="pre">get_actor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.get_actor"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.get_actor" title="Ссылка на это определение"></a></dt>
+<dd><p>Обрабатывает ввод имени актера и показывает топ фильмов с его участием.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект сообщения с именем актера</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.search_movie">
+<span class="sig-name descname"><span class="pre">search_movie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.search_movie"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.search_movie" title="Ссылка на это определение"></a></dt>
+<dd><p>Обрабатывает поиск фильма по названию.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект сообщения с названием фильма</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.select_genre">
+<span class="sig-name descname"><span class="pre">select_genre</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.select_genre"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.select_genre" title="Ссылка на это определение"></a></dt>
+<dd><p>Обрабатывает выбор жанра пользователем.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект сообщения с выбранным жанром</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.top_movies_by_genre">
+<span class="sig-name descname"><span class="pre">top_movies_by_genre</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">genre</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.top_movies_by_genre"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.top_movies_by_genre" title="Ссылка на это определение"></a></dt>
+<dd><p>Показывает топ 10 фильмов по выбранному жанру.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект исходного сообщения</p></li>
+<li><p><strong>genre</strong> (<em>str</em>) – Выбранный жанр</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.top_movies_by_year">
+<span class="sig-name descname"><span class="pre">top_movies_by_year</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.top_movies_by_year"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.top_movies_by_year" title="Ссылка на это определение"></a></dt>
+<dd><p>Показывает топ 10 фильмов за указанный год.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект исходного сообщения</p></li>
+<li><p><strong>year</strong> (<em>int</em>) – Год выпуска фильмов</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.top_movies_by_director">
+<span class="sig-name descname"><span class="pre">top_movies_by_director</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">director</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.top_movies_by_director"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.top_movies_by_director" title="Ссылка на это определение"></a></dt>
+<dd><p>Показывает топ 10 фильмов указанного режиссера.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект исходного сообщения</p></li>
+<li><p><strong>director</strong> (<em>str</em>) – Имя режиссера</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.top_movies_by_actor">
+<span class="sig-name descname"><span class="pre">top_movies_by_actor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.top_movies_by_actor"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.top_movies_by_actor" title="Ссылка на это определение"></a></dt>
+<dd><p>Показывает топ 10 фильмов с указанным актером.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект исходного сообщения</p></li>
+<li><p><strong>actor</strong> (<em>str</em>) – Имя актера</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.send_top_movies">
+<span class="sig-name descname"><span class="pre">send_top_movies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_movies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.send_top_movies"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.send_top_movies" title="Ссылка на это определение"></a></dt>
+<dd><p>Отправляет пользователю список топ фильмов с интерактивными кнопками.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект исходного сообщения</p></li>
+<li><p><strong>top_movies</strong> (<em>pd.DataFrame</em>) – DataFrame с фильмами</p></li>
+<li><p><strong>category</strong> (<em>str</em>) – Категория поиска (для заголовка)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.show_movie_details">
+<span class="sig-name descname"><span class="pre">show_movie_details</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">movie</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.show_movie_details"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.show_movie_details" title="Ссылка на это определение"></a></dt>
+<dd><p>Отображает подробную информацию о фильме и интерактивные кнопки.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>telebot.types.Message</em>) – Объект входящего сообщения от пользователя</p></li>
+<li><p><strong>movie</strong> (<em>pandas.Series</em>) – Данные о фильме (строка DataFrame)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Исключение<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>KeyError</strong> – Если отсутствуют обязательные поля в данных фильма</p></li>
+<li><p><strong>Exception</strong> – При ошибках отправки сообщений или медиа</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Примечание</p>
+<p>Обязательные поля в данных фильма:
+- NameFilm: Название фильма
+- Year: Год выпуска
+- ratingKP: Рейтинг Кинопоиска
+- Description: Описание фильма
+- PosterUrl: URL постера
+- WebUrl: URL для просмотра
+- WebUrl2: URL страницы на Кинопоиске</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="telegram_bot.main.MovieBot.handle_movie_callback">
+<span class="sig-name descname"><span class="pre">handle_movie_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#MovieBot.handle_movie_callback"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.MovieBot.handle_movie_callback" title="Ссылка на это определение"></a></dt>
+<dd><p>Обрабатывает callback от интерактивных кнопок выбора фильма.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>call</strong> (<em>telebot.types.CallbackQuery</em>) – Объект callback</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="telegram_bot.main.run_bot">
+<span class="sig-prename descclassname"><span class="pre">telegram_bot.main.</span></span><span class="sig-name descname"><span class="pre">run_bot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/telegram_bot/main.html#run_bot"><span class="viewcode-link"><span class="pre">[исходный</span> <span class="pre">код]</span></span></a><a class="headerlink" href="#telegram_bot.main.run_bot" title="Ссылка на это определение"></a></dt>
+<dd><p>Запускает бота с указанным токеном.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Параметры<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>token</strong> (<em>str</em>) – API-токен Telegram бота</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">MovieBot</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Навигация</h3>
+<p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Все модули проекта</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parser.html">Parser Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Petrparser.html">Petrparser Module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Telegram Bot Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="background.html">Background Service</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parser.html">Parser Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Petrparser.html">Petrparser Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Telegram Bot Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#telegram_bot.main.MovieBot"><code class="docutils literal notranslate"><span class="pre">MovieBot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#telegram_bot.main.run_bot"><code class="docutils literal notranslate"><span class="pre">run_bot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background Service</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Все модули проекта</a><ul>
+      <li>Предыдущая: <a href="Petrparser.html" title="предыдущая глава">Petrparser Module</a></li>
+      <li>Следующая: <a href="background.html" title="следующая глава">Background Service</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Novikov D.V., Polyakova V.V, Prepelitsa P.P..
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/telegram_bot.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
