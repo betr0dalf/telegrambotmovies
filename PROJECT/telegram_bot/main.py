@@ -553,5 +553,5 @@ def run_bot(token: str):
 
 if __name__ == "__main__":
     # Токен бота
-    BOT_TOKEN = '7606959553:AAGS4AwiHLHoafx_vuKOxB4mPW1SPSLSTKY'
+    BOT_TOKEN = 'token'
     run_bot(BOT_TOKEN)
