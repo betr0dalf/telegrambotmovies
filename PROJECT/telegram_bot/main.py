@@ -22,7 +22,8 @@ import telebot
 from telebot import types
 import pandas as pd
 from background import keep_alive
-# from telegram_bot.background import keep_alive
+import random
+#  from telegram_bot.background import keep_alive
 
 
 class MovieBot:
@@ -78,22 +79,55 @@ class MovieBot:
         def callback_movie_details(call):
             self.handle_movie_callback(call)
 
-    def show_main_menu(self, message):
+    def send_random_movie(self, message):
         """
-        Показывает главное меню бота.
+        Отправляет пользователю случайный фильм из базы данных.
 
         :param message: Объект сообщения Telegram
         :type message: telebot.types.Message
         """
+        movie = self.movies.sample(1).iloc[0]
+        self.show_movie_details(message, movie)
+
+    def recommend_by_genre(self, message):
+        """
+        Рекомендует случайный фильм по выбранному жанру.
+
+        :param message: Объект сообщения с выбранным жанром
+        :type message: telebot.types.Message
+
+        Проверяет, что жанр существует в базе данных, затем выбирает случайный фильм
+        этого жанра и показывает его детали. Если жанр не найден или фильмы отсутствуют,
+        отправляет соответствующее сообщение пользователю.
+        """
+        genre = message.text
+        if genre not in self.movies['Genres'].apply(eval).explode().unique():
+            self.bot.send_message(message.chat.id,
+                                  'Пожалуйста, выберите жанр из предложенных.')
+            self.show_main_menu(message)
+        else:
+            genre_movies = self.movies[self.movies['Genres'].apply(lambda x: genre in eval(x))]
+            if genre_movies.empty:
+                self.bot.send_message(message.chat.id, 'Фильмы этого жанра не найдены.')
+            else:
+                movie = genre_movies.sample(1).iloc[0]
+                self.show_movie_details(message, movie)
+
+    def show_main_menu(self, message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         button1 = types.KeyboardButton('Искать фильм 🍿')
         button2 = types.KeyboardButton('Топ фильмов по жанру 🎥')
         button3 = types.KeyboardButton('Топ фильмы за год 🔥')
         button4 = types.KeyboardButton('Топ фильмы режиссера 🎬')
         button5 = types.KeyboardButton('Топ фильмы актёра 🌟')
+        button6 = types.KeyboardButton('Случайный фильм 🎲')
+        button7 = types.KeyboardButton('Рекомендация по жанру 💡')
+
         markup.row(button1)
         markup.row(button2, button3)
         markup.row(button4, button5)
+        markup.row(button6, button7)
+
         self.bot.send_message(message.chat.id,
                               'Выберите действие:',
                               reply_markup=markup)
@@ -128,6 +162,17 @@ class MovieBot:
             elif message.text == 'Топ фильмы актёра 🌟':
                 msg = self.bot.send_message(message.chat.id, 'Введите имя актёра:')
                 self.bot.register_next_step_handler(msg, self.get_actor)
+            elif message.text == 'Случайный фильм 🎲':
+                self.send_random_movie(message)
+            elif message.text == 'Рекомендация по жанру 💡':
+                genres = self.movies['Genres'].apply(eval).explode().unique()
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                for genre in genres:
+                    markup.add(types.KeyboardButton(genre))
+                msg = self.bot.send_message(message.chat.id,
+                                            'Выберите жанр для рекомендации:',
+                                            reply_markup=markup)
+                self.bot.register_next_step_handler(msg, self.recommend_by_genre)
             else:
                 self.bot.send_message(message.chat.id,
                                       'Нажмите на любую из кнопок внизу экрана 👁️👄👁️')
@@ -135,9 +180,6 @@ class MovieBot:
         except Exception as e:
             self.bot.send_message(message.chat.id, f'Произошла ошибка: {e}')
             self.show_main_menu(message)
-
-    # Все остальные методы с аналогичной документацией...
-    # Привожу их в сокращенном виде, но с сохранением структуры
 
     def get_year(self, message):
         """
