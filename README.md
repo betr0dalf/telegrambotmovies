@@ -44,3 +44,5 @@ MovieBot - это бот-сервис в Telegram, который поможет
   1. Скачайте **Telegram** по ссылке [Desktop Telegram](https://desktop.telegram.org/?setln=ru)
   2. Войдите в аккаунт или зарегистрируйтесь
   3. Перейдите к боту по тегу [@CinemaWatchProjectBot](https://t.me/CinemaWatchProjectBot)
+
+UPD: Бот временно недоступен, производятся технические работы по расширению базы данных и улучшения стабильности.
