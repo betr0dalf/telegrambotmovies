@@ -11,7 +11,7 @@ cchardet==2.1.7
 checks==0.2
 ConfigParser==7.0.0
 contextlib2==21.6.0
-cryptography==42.0.5
+cryptography==50.0.0
 cycler==0.12.1
 Cython==3.0.10
 dask==2024.4.2
